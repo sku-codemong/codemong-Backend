@@ -1,15 +1,16 @@
-// src/auth/cookie.util.js
 const isProd = process.env.NODE_ENV === "production";
+const base = {
+  httpOnly: true,
+  sameSite: isProd ? "none" : "lax",
+  secure: isProd,
+};
 
-// TTL 문자열(예: "7d", "15m")을 ms로
-function parseTTL(str) {
-  const m = /^(\d+)([smhd])$/.exec(str);
-  if (!m) throw new Error(`Invalid TTL format: ${str}`);
-  const n = Number(m[1]);
-  const unit = m[2];
-  const mult = { s: 1, m: 60, h: 3600, d: 86400 }[unit];
-  return n * mult * 1000; // ms
-}
+export const accessCookieName = "at";
+export const accessCookieOptions = {
+  ...base,
+  path: "/",
+  maxAge: /* 15m */ 15 * 60 * 1000,
+};
 
 export const refreshCookieName = "rt";
 export const refreshCookieOptions = {

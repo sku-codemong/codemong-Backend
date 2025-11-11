@@ -53,10 +53,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/SubjectResponse'
  */
-router.post(
-  "/",
-  ctrl.createSubject
-);
+router.post("/", ctrl.createSubject);
 
 /**
  * @swagger
@@ -93,10 +90,7 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/SubjectResponse'
  */
-router.patch(
-  "/:id",
-  ctrl.updateSubject
-);
+router.patch("/:id", ctrl.updateSubject);
 
 /**
  * @swagger
@@ -132,10 +126,7 @@ router.patch(
  *             schema:
  *               $ref: '#/components/schemas/SubjectResponse'
  */
-router.patch(
-  "/:id/archive",
-  ctrl.archiveSubject
-);
+router.patch("/:id/archive", ctrl.archiveSubject);
 
 /**
  * @swagger
@@ -160,10 +151,7 @@ router.patch(
  *             schema:
  *               $ref: '#/components/schemas/SubjectResponse'
  */
-router.get(
-  "/:id",
-  ctrl.getSubjectById
-);
+router.get("/:id", ctrl.getSubjectById);
 
 /**
  * @swagger
