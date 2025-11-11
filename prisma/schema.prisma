@@ -13,6 +13,7 @@ enum Gender {
   Male
   Female
 }
+
 enum StudySource {
   timer
   manual
@@ -23,41 +24,79 @@ enum StudyStatus {
   stopped
 }
 
+/**
+ * 난이도
+ */
+enum SubjectDifficulty {
+  Easy
+  Normal
+  Hard
+}
+
+/**
+ * 과제/프로젝트/시험 등 작업 유형
+ */
+enum TaskType {
+  assignment
+  project
+  exam
+  etc
+}
+
+/**
+ * 작업 상태
+ */
+enum TaskStatus {
+  todo
+  in_progress
+  done
+  archived
+}
+
 //// users ////
 model users {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique @db.VarChar(50)
-  password_hash String   @db.VarChar(100)
-  nickname      String?  @db.VarChar(50)
+  id            Int     @id @default(autoincrement())
+  email         String  @unique @db.VarChar(50)
+  password_hash String  @db.VarChar(100)
+  nickname      String? @db.VarChar(50)
   grade         Int?
   gender        Gender?
-  is_completed  Boolean  @default(false)
+  is_completed  Boolean @default(false)
 
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // relations
-  subjects      subjects[]
-  sessions      sessions[]
-  refresh_tokens refresh_token[]   
+  subjects       subjects[]
+  sessions       sessions[]
+  refresh_tokens refresh_token[]
+  tasks          subject_tasks[]
 }
 
 //// subjects ////
 model subjects {
-  id                Int      @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   user_id           Int
-  name              String   @db.VarChar(100)
-  color             String?  @db.VarChar(20)
-  target_weekly_min Int      @default(0)
-  weight            Decimal  @default(1.00) @db.Decimal(5, 2)
-  archived          Boolean  @default(false)
+  name              String  @db.VarChar(100)
+  color             String? @db.VarChar(20)
+  target_weekly_min Int     @default(0)
 
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  // ⬇️ 가중치 계산의 입력값
+  credit     Decimal?          @db.Decimal(3, 1) // 학점 (예: 3.0)
+  difficulty SubjectDifficulty @default(Normal) // 난이도
+
+  // ⬇️ 최종 분배 가중치(서비스에서 계산하여 캐시)
+  weight Decimal @default(1.00) @db.Decimal(5, 2)
+
+  archived Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // relations
-  user     users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user     users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
   sessions sessions[]
+  tasks    subject_tasks[]
 
   @@unique([user_id, name])
   @@index([user_id])
@@ -65,17 +104,17 @@ model subjects {
 
 //// sessions (공부 기록) ////
 model sessions {
-  id           Int          @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   user_id      Int
   subject_id   Int
   start_at     DateTime
   end_at       DateTime?
-  duration_sec Int          @default(0)
-  source       StudySource  @default(timer)
-  status       StudyStatus  @default(running)
+  duration_sec Int         @default(0)
+  source       StudySource @default(timer)
+  status       StudyStatus @default(running)
 
-  created_at   DateTime     @default(now())
-  updated_at   DateTime     @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // relations
   user    users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -85,12 +124,35 @@ model sessions {
   @@index([subject_id, start_at])
 }
 
+//// subject_tasks (과제/프로젝트/시험 등) ////
+model subject_tasks {
+  id            Int        @id @default(autoincrement())
+  user_id       Int
+  subject_id    Int? // 과목 없는 일반 작업도 허용
+  type          TaskType   @default(assignment)
+  title         String     @db.VarChar(200)
+  description   String?    @db.Text
+  due_at        DateTime?
+  estimated_min Int? // 예상 소요 시간(분)
+  status        TaskStatus @default(todo)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // relations
+  user    users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subject subjects? @relation(fields: [subject_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id, status, due_at])
+  @@index([subject_id, status])
+}
+
 //// refresh_token ////
 model refresh_token {
-  id         Int      @id @default(autoincrement())   // 아이디 (INT, auto_increment)
-  user_id    Int                                      // 유저아이디 (INT)
-  token      String   @db.Text                        // 토큰 (TEXT)
-  updated_at DateTime @updatedAt                      // 수정일자 (자동 갱신)
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @db.Text
+  updated_at DateTime @updatedAt
 
   // relations
   user users @relation(fields: [user_id], references: [id], onDelete: Cascade)

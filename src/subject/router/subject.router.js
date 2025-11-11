@@ -1,10 +1,8 @@
+// src/subject/router/subject.router.js
 import { Router } from "express";
 import * as ctrl from "../controller/subject.controller.js";
-import { requireAuth } from "../../auth/middleware/auth.middleware.js";
 
 const router = Router();
-
-// router.use(requireAuth); // 인증 미들웨어 붙일거면
 
 /**
  * @swagger
@@ -18,8 +16,10 @@ const router = Router();
  * /api/subjects:
  *   post:
  *     summary: 과목 생성
- *     description: 유저 소유의 과목을 생성한다.
+ *     description: 로그인된 유저의 새로운 과목을 생성합니다. credit(학점), difficulty(난이도) 등 입력값을 기반으로 weight(가중치)가 자동 계산됩니다.
  *     tags: [Subjects]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -36,12 +36,15 @@ const router = Router();
  *                 example: "#7C3AED"
  *               target_weekly_min:
  *                 type: integer
- *                 minimum: 0
  *                 example: 300
- *               weight:
+ *               credit:
  *                 type: number
  *                 format: float
- *                 example: 1.5
+ *                 example: 3.0
+ *               difficulty:
+ *                 type: string
+ *                 enum: [Easy, Normal, Hard]
+ *                 example: "Normal"
  *     responses:
  *       "201":
  *         description: 생성된 과목
@@ -57,12 +60,16 @@ router.post("/", ctrl.createSubject);
  * /api/subjects/{id}:
  *   patch:
  *     summary: 과목 수정
+ *     description: 과목 정보를 수정하고, credit/difficulty 변경 시 weight를 자동 재계산합니다.
  *     tags: [Subjects]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: integer }
+ *         schema:
+ *           type: integer
  *     requestBody:
  *       required: true
  *       content:
@@ -72,8 +79,9 @@ router.post("/", ctrl.createSubject);
  *             properties:
  *               name: { type: string, example: "운영체제" }
  *               color: { type: string, example: "#10B981" }
- *               target_weekly_min: { type: integer, minimum: 0, example: 240 }
- *               weight: { type: number, format: float, example: 1.0 }
+ *               target_weekly_min: { type: integer, example: 240 }
+ *               credit: { type: number, format: float, example: 3.0 }
+ *               difficulty: { type: string, enum: [Easy, Normal, Hard], example: "Hard" }
  *     responses:
  *       "200":
  *         description: 수정된 과목
@@ -86,18 +94,33 @@ router.patch("/:id", ctrl.updateSubject);
 
 /**
  * @swagger
- * /api/subjects/{id}:
- *   get:
- *     summary: 과목 단건 조회
+ * /api/subjects/{id}/archive:
+ *   patch:
+ *     summary: 과목 보관/복구
+ *     description: 과목을 보관(archived=true)하거나 복구(archived=false)합니다. 복구 시 weight가 자동 재계산됩니다.
  *     tags: [Subjects]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: integer }
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [archived]
+ *             properties:
+ *               archived:
+ *                 type: boolean
+ *                 example: true
  *     responses:
  *       "200":
- *         description: 조회 결과
+ *         description: 변경된 과목 정보
  *         content:
  *           application/json:
  *             schema:
@@ -107,29 +130,61 @@ router.patch("/:id/archive", ctrl.archiveSubject);
 
 /**
  * @swagger
+ * /api/subjects/{id}:
+ *   get:
+ *     summary: 과목 단건 조회
+ *     description: ID로 특정 과목을 조회합니다.
+ *     tags: [Subjects]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       "200":
+ *         description: 조회 결과
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubjectResponse'
+ */
+router.get("/:id", ctrl.getSubjectById);
+
+/**
+ * @swagger
  * /api/subjects:
  *   get:
- *     summary: 과목 목록/검색
+ *     summary: 과목 목록 조회
+ *     description: 로그인된 유저의 과목 목록을 검색/페이징 조건으로 조회합니다. archived=false인 과목만 기본으로 반환하며, includeArchived=true를 지정하면 보관 과목도 포함됩니다.
  *     tags: [Subjects]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: q
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *         description: 과목명 검색(부분일치, 대소문자 무시)
  *       - in: query
  *         name: includeArchived
- *         schema: { type: boolean }
- *         example: false
+ *         schema:
+ *           type: boolean
+ *           example: false
  *       - in: query
  *         name: limit
- *         schema: { type: integer, minimum: 1, maximum: 50 }
- *         example: 20
+ *         schema:
+ *           type: integer
+ *           example: 20
  *       - in: query
  *         name: cursor
- *         schema: { type: integer }
+ *         schema:
+ *           type: integer
  *     responses:
  *       "200":
- *         description: 목록 응답
+ *         description: 과목 목록
  *         content:
  *           application/json:
  *             schema:
@@ -138,18 +193,15 @@ router.patch("/:id/archive", ctrl.archiveSubject);
  *                 ok: { type: boolean }
  *                 items:
  *                   type: array
- *                   items: { $ref: '#/components/schemas/Subject' }
- *                 nextCursor: { type: integer, nullable: true }
+ *                   items:
+ *                     $ref: '#/components/schemas/SubjectResponse'
+ *                 nextCursor:
+ *                   type: integer
+ *                   nullable: true
  */
-router.get("/:id", ctrl.getSubjectById);
-
-/**
- * @swagger
- * /api/subjects:
- *   get:
- *     summary: 과목 목록/검색
- *     tags: [Subjects]
- */
-router.get("/", ctrl.listSubjects);
+router.get(
+  "/",
+  ctrl.listSubjects
+);
 
 export default router;

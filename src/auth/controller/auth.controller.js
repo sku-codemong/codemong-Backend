@@ -5,6 +5,8 @@ import {
   accessCookieOptions,
   refreshCookieName,
   refreshCookieOptions,
+  accessCookieName,
+  accessCookieOptions,
 } from "../../utils/cookies.js";
 import {
   parseRegisterRequest,
@@ -47,12 +49,14 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const dto = parseLoginRequest(req.body);
-    const { user, accessToken, refreshTokenValue } = await authService.login(
-      dto
-    );
-    res.cookie(accessCookieName, accessToken, accessCookieOptions);
+    const { user, accessToken, refreshTokenValue } = await authService.login(dto);
+
+    // 토큰은 httpOnly 쿠키로 전달
+    res.cookie(accessCookieName,  accessToken,       accessCookieOptions);
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
-    res.json({ user });
+
+    // 바디에는 민감정보 빼고 유저만
+    return res.status(200).json({ ok: true, user });
   } catch (e) {
     next(e);
   }
@@ -71,13 +75,17 @@ export const login = async (req, res, next) => {
  */
 export const refresh = async (req, res, next) => {
   try {
-    const cur = req.cookies?.[refreshCookieName];
+    const cur = req.cookies?.[refreshCookieName]; // 기존 RT
     const { accessToken, refreshTokenValue } = await authService.refresh({
       refreshTokenValue: cur,
     });
-    res.cookie(accessCookieName, accessToken, accessCookieOptions);
+
+    // 새 토큰 쿠키로 재발급
+    res.cookie(accessCookieName,  accessToken,       accessCookieOptions);
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
-    res.json({ ok: true }); // 바디 AT는 생략 가능
+
+    // 바디에는 토큰 전달 X
+    return res.status(200).json({ ok: true });
   } catch (e) {
     next(e);
   }
@@ -99,10 +107,14 @@ export const logout = async (req, res, next) => {
   try {
     const { allDevices, userId } = parseLogoutRequest(req.body ?? {});
     const cur = req.cookies?.[refreshCookieName];
+
     await authService.logout({ refreshTokenValue: cur, allDevices, userId });
-    res.clearCookie(accessCookieName, { path: accessCookieOptions.path });
-    res.clearCookie(refreshCookieName, { path: refreshCookieOptions.path });
-    res.status(204).send();
+
+    // 설정 때와 동일한 옵션으로 삭제 (path/domain/sameSite/secure 등)
+    res.clearCookie(accessCookieName,  { ...accessCookieOptions,  path: accessCookieOptions.path });
+    res.clearCookie(refreshCookieName, { ...refreshCookieOptions, path: refreshCookieOptions.path });
+
+    return res.sendStatus(204); // 본문 없이 성공
   } catch (e) {
     next(e);
   }
