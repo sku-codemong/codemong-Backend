@@ -3,6 +3,8 @@ import { authService } from "../service/auth.service.js";
 import {
   refreshCookieName,
   refreshCookieOptions,
+  accessCookieName,
+  accessCookieOptions,
 } from "../../utils/cookies.js";
 import {
   parseRegisterRequest,
@@ -49,6 +51,7 @@ export const login = async (req, res, next) => {
       dto
     );
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
+    res.cookie(accessCookieName, accessToken, accessCookieOptions);
     res.json({ user, accessToken });
   } catch (e) {
     next(e);
@@ -73,6 +76,7 @@ export const refresh = async (req, res, next) => {
       refreshTokenValue: cur,
     });
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
+    res.cookie(accessCookieName, accessToken, accessCookieOptions);
     res.json({ accessToken });
   } catch (e) {
     next(e);
@@ -96,6 +100,7 @@ export const logout = async (req, res, next) => {
     const { allDevices, userId } = parseLogoutRequest(req.body ?? {});
     const cur = req.cookies?.[refreshCookieName];
     await authService.logout({ refreshTokenValue: cur, allDevices, userId });
+    res.clearCookie(accessCookieName, accessCookieOptions);
     res.clearCookie(refreshCookieName, refreshCookieOptions);
     res.status(204).send();
   } catch (e) {

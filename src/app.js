@@ -28,7 +28,11 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
-app.use("/api/subjects", requireAuth(), subjectRouter);
+app.use(
+  "/api/subjects",
+  requireAuth({ allowCookie: true, cookieName: "at" }),
+  subjectRouter
+);
 
 app.listen(PORT, () => {
   console.log(`서버 열림 - 포트 : ${PORT}`);
