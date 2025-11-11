@@ -32,6 +32,10 @@ const extractAccessToken = (
 export const requireAuth =
   (options = {}) =>
   (req, res, next) => {
+    // requireAuth 맨 처음
+    console.log("[AUTH] cookies keys =", Object.keys(req.cookies || {}));
+    console.log("[AUTH] token from cookie =", req.cookies?.at?.slice(0, 20));
+
     const token = extractAccessToken(req, options);
     if (!token)
       return res.status(401).json({ message: "Missing access token" });
