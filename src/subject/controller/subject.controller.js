@@ -62,7 +62,7 @@ export async function archiveSubject(req, res, next) {
     const userId = getUserId(req);
     const id = Number(req.params.id);
     const dto = parseArchiveDto(req.body); // { archived: boolean }
-    const subject = await svc.setArchive(userId, id, dto.archived);
+    const subject = await svc.setArchived(userId, id, dto.archived);
     res.json({ ok: true, subject: toSubjectRes(subject) });
   } catch (e) {
     next(e);

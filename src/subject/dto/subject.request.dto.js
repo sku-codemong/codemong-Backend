@@ -23,7 +23,8 @@ export function parseCreateDto(body) {
     color: body.color?.trim() || null,
     target_weekly_min:
       toIntOrNull(body.target_weekly_min, "target_weekly_min") ?? 0,
-    weight: toNumberOrNull(body.weight, "weight") ?? 1.0,
+    credit: body.credit != null ? Number(body.credit) : null,
+    difficulty: body.difficulty ?? "Normal",
   };
 }
 
@@ -36,8 +37,10 @@ export function parseUpdateDto(body) {
       body.target_weekly_min,
       "target_weekly_min"
     );
-  if (body.weight !== undefined)
-    dto.weight = toNumberOrNull(body.weight, "weight");
+  if (body.credit !== undefined)
+    dto.credit = body.credit != null ? Number(body.credit) : null;
+  if (body.difficulty !== undefined) dto.difficulty = body.difficulty;
+  if (body.archived !== undefined) dto.archived = !!body.archived;
   return dto;
 }
 
