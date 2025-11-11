@@ -50,7 +50,7 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/SubjectResponse'
  */
-router.post("/", requireAuth(), ctrl.createSubject);
+router.post("/", ctrl.createSubject);
 
 /**
  * @swagger
@@ -82,7 +82,7 @@ router.post("/", requireAuth(), ctrl.createSubject);
  *             schema:
  *               $ref: '#/components/schemas/SubjectResponse'
  */
-router.patch("/:id", requireAuth(), ctrl.updateSubject);
+router.patch("/:id", ctrl.updateSubject);
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.patch("/:id", requireAuth(), ctrl.updateSubject);
  *             schema:
  *               $ref: '#/components/schemas/SubjectResponse'
  */
-router.patch("/:id/archive", requireAuth(), ctrl.archiveSubject);
+router.patch("/:id/archive", ctrl.archiveSubject);
 
 /**
  * @swagger
@@ -141,7 +141,7 @@ router.patch("/:id/archive", requireAuth(), ctrl.archiveSubject);
  *                   items: { $ref: '#/components/schemas/Subject' }
  *                 nextCursor: { type: integer, nullable: true }
  */
-router.get("/:id", requireAuth(), ctrl.getSubjectById);
+router.get("/:id", ctrl.getSubjectById);
 
 /**
  * @swagger
@@ -150,6 +150,6 @@ router.get("/:id", requireAuth(), ctrl.getSubjectById);
  *     summary: 과목 목록/검색
  *     tags: [Subjects]
  */
-router.get("/", requireAuth(), ctrl.listSubjects);
+router.get("/", ctrl.listSubjects);
 
 export default router;

@@ -1,6 +1,8 @@
 // src/auth/controller/auth.controller.js
 import { authService } from "../service/auth.service.js";
 import {
+  accessCookieName,
+  accessCookieOptions,
   refreshCookieName,
   refreshCookieOptions,
 } from "../../utils/cookies.js";
@@ -48,8 +50,9 @@ export const login = async (req, res, next) => {
     const { user, accessToken, refreshTokenValue } = await authService.login(
       dto
     );
+    res.cookie(accessCookieName, accessToken, accessCookieOptions);
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
-    res.json({ user, accessToken });
+    res.json({ user });
   } catch (e) {
     next(e);
   }
@@ -72,8 +75,9 @@ export const refresh = async (req, res, next) => {
     const { accessToken, refreshTokenValue } = await authService.refresh({
       refreshTokenValue: cur,
     });
+    res.cookie(accessCookieName, accessToken, accessCookieOptions);
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
-    res.json({ accessToken });
+    res.json({ ok: true }); // 바디 AT는 생략 가능
   } catch (e) {
     next(e);
   }
@@ -96,7 +100,8 @@ export const logout = async (req, res, next) => {
     const { allDevices, userId } = parseLogoutRequest(req.body ?? {});
     const cur = req.cookies?.[refreshCookieName];
     await authService.logout({ refreshTokenValue: cur, allDevices, userId });
-    res.clearCookie(refreshCookieName, refreshCookieOptions);
+    res.clearCookie(accessCookieName, { path: accessCookieOptions.path });
+    res.clearCookie(refreshCookieName, { path: refreshCookieOptions.path });
     res.status(204).send();
   } catch (e) {
     next(e);
