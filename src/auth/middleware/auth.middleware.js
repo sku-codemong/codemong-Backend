@@ -9,7 +9,10 @@ const getBearerToken = (req) => {
 };
 
 /** 내부 유틸: 헤더 우선, 필요 시 쿠키에서도 AT 읽기 */
-const extractAccessToken = (req, { allowCookie = false, cookieName = "at" } = {}) => {
+const extractAccessToken = (
+  req,
+  { allowCookie = false, cookieName = "at" } = {}
+) => {
   const fromHeader = getBearerToken(req);
   if (fromHeader) return fromHeader;
   if (allowCookie) return req.cookies?.[cookieName] ?? null;
@@ -26,18 +29,32 @@ const extractAccessToken = (req, { allowCookie = false, cookieName = "at" } = {}
  * @param {object} [options] - { allowCookie?: boolean, cookieName?: string }
  * @returns {(req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void}
  */
-export const requireAuth = (options = {}) => (req, res, next) => {
-  const token = extractAccessToken(req, options);
-  if (!token) return res.status(401).json({ message: "Missing access token" });
+export const requireAuth =
+  (options = {}) =>
+  (req, res, next) => {
+    // requireAuth 맨 처음
+    console.log("[AUTH] cookies keys =", Object.keys(req.cookies || {}));
+    console.log("[AUTH] token from cookie =", req.cookies?.at?.slice(0, 20));
 
-  try {
-    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = { id: payload.sub };
-    next();
-  } catch {
-    return res.status(401).json({ message: "Invalid or expired access token" });
-  }
-};
+    const token = extractAccessToken(req, options);
+    if (!token)
+      return res.status(401).json({ message: "Missing access token" });
+    try {
+      const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+      const uid = payload?.sub ?? payload?.id; // ✅ 둘 다 대응
+      if (!uid)
+        return res
+          .status(401)
+          .json({ message: "Invalid access token payload" });
+      req.user = { id: Number(uid) };
+      console.log("[AUTH] req.user.id =", req.user.id); // 디버그
+      return next();
+    } catch {
+      return res
+        .status(401)
+        .json({ message: "Invalid or expired access token" });
+    }
+  };
 
 /**
  * **[Auth]**
@@ -50,18 +67,20 @@ export const requireAuth = (options = {}) => (req, res, next) => {
  * @param {object} [options] - { allowCookie?: boolean, cookieName?: string }
  * @returns {(req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void}
  */
-export const optionalAuth = (options = {}) => (req, res, next) => {
-  const token = extractAccessToken(req, options);
-  if (!token) return next();
+export const optionalAuth =
+  (options = {}) =>
+  (req, res, next) => {
+    const token = extractAccessToken(req, options);
+    if (!token) return next();
 
-  try {
-    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = { id: payload.sub };
-  } catch {
-    // 무시하고 비로그인 상태로 계속 진행
-  }
-  next();
-};
+    try {
+      const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+      req.user = { id: payload.sub };
+    } catch {
+      // 무시하고 비로그인 상태로 계속 진행
+    }
+    next();
+  };
 
 /**
  * **[Auth]**
@@ -73,18 +92,22 @@ export const optionalAuth = (options = {}) => (req, res, next) => {
  * @param {object} [options] - { from?: "params"|"body"|"query", key?: string }
  * @returns {(req: import('express').Request, res: import('express').Response, next: import('express').NextFunction)=>void}
  */
-export const requireSelf = ({ from = "params", key = "userId" } = {}) => (req, res, next) => {
-  if (!req.user?.id) return res.status(401).json({ message: "Unauthorized" });
+export const requireSelf =
+  ({ from = "params", key = "userId" } = {}) =>
+  (req, res, next) => {
+    if (!req.user?.id) return res.status(401).json({ message: "Unauthorized" });
 
-  const container = from === "body" ? req.body : from === "query" ? req.query : req.params;
-  const targetRaw = container?.[key];
-  const targetId = typeof targetRaw === "string" ? Number(targetRaw) : targetRaw;
+    const container =
+      from === "body" ? req.body : from === "query" ? req.query : req.params;
+    const targetRaw = container?.[key];
+    const targetId =
+      typeof targetRaw === "string" ? Number(targetRaw) : targetRaw;
 
-  if (!targetId || Number.isNaN(targetId)) {
-    return res.status(400).json({ message: "Invalid or missing user id" });
-  }
-  if (Number(req.user.id) !== Number(targetId)) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-  next();
-};
+    if (!targetId || Number.isNaN(targetId)) {
+      return res.status(400).json({ message: "Invalid or missing user id" });
+    }
+    if (Number(req.user.id) !== Number(targetId)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+  };

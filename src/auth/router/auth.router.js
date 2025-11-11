@@ -9,6 +9,40 @@ import {
 import { requireAuth } from "../middleware/auth.middleware.js";
 
 const router = Router();
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Subject:
+ *       type: object
+ *       properties:
+ *         id: { type: integer, example: 12 }
+ *         name: { type: string, example: "자료구조" }
+ *         color: { type: string, nullable: true, example: "#7C3AED" }
+ *         target_weekly_min: { type: integer, example: 300 }
+ *         weight: { type: number, example: 1.25 }
+ *         archived: { type: boolean, example: false }
+ *         created_at: { type: string, format: date-time }
+ *         updated_at: { type: string, format: date-time }
+ *
+ *     SubjectResponse:
+ *       type: object
+ *       properties:
+ *         ok: { type: boolean, example: true }
+ *         subject:
+ *           $ref: '#/components/schemas/Subject'
+ *
+ *     SubjectListResponse:
+ *       type: object
+ *       properties:
+ *         ok: { type: boolean, example: true }
+ *         items:
+ *           type: array
+ *           items: { $ref: '#/components/schemas/Subject' }
+ *         nextCursor:
+ *           type: integer
+ *           nullable: true
+ */
 
 /**
  * @swagger
