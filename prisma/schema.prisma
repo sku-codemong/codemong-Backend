@@ -1,0 +1,99 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+//// ERD 기반 ENUM ////
+enum Gender {
+  Male
+  Female
+}
+enum StudySource {
+  timer
+  manual
+}
+
+enum StudyStatus {
+  running
+  stopped
+}
+
+//// users ////
+model users {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique @db.VarChar(50)
+  password_hash String   @db.VarChar(100)
+  nickname      String?  @db.VarChar(50)
+  grade         Int?
+  gender        Gender?
+  is_completed  Boolean  @default(false)
+
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // relations
+  subjects      subjects[]
+  sessions      sessions[]
+  refresh_tokens refresh_token[]   
+}
+
+//// subjects ////
+model subjects {
+  id                Int      @id @default(autoincrement())
+  user_id           Int
+  name              String   @db.VarChar(100)
+  color             String?  @db.VarChar(20)
+  target_weekly_min Int      @default(0)
+  weight            Decimal  @default(1.00) @db.Decimal(5, 2)
+  archived          Boolean  @default(false)
+
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // relations
+  user     users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  sessions sessions[]
+
+  @@unique([user_id, name])
+  @@index([user_id])
+}
+
+//// sessions (공부 기록) ////
+model sessions {
+  id           Int          @id @default(autoincrement())
+  user_id      Int
+  subject_id   Int
+  start_at     DateTime
+  end_at       DateTime?
+  duration_sec Int          @default(0)
+  source       StudySource  @default(timer)
+  status       StudyStatus  @default(running)
+
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+
+  // relations
+  user    users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  subject subjects @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, start_at])
+  @@index([subject_id, start_at])
+}
+
+//// refresh_token ////
+model refresh_token {
+  id         Int      @id @default(autoincrement())   // 아이디 (INT, auto_increment)
+  user_id    Int                                      // 유저아이디 (INT)
+  token      String   @db.Text                        // 토큰 (TEXT)
+  updated_at DateTime @updatedAt                      // 수정일자 (자동 갱신)
+
+  // relations
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
