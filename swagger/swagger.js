@@ -17,9 +17,13 @@ const options = {
       description:
         "프로젝트 설명 Node.js Swagger swagger-jsdoc 방식 RestFul API 클라이언트 UI",
     },
-    servers: [
-      { url: "http://localhost:4000" },
-    ],
+    components: {
+      securitySchemes: {
+        BearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+      },
+    },
+    servers: [{ url: "http://localhost:4000" }],
+    security: [{ BearerAuth: [] }], 
   },
   // 주석이 들어있는 라우터/컨트롤러 경로로 맞춰주세요
   // 전체 src 폴더를 긁어오는게 안전합니다.
