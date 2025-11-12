@@ -5,11 +5,11 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
-import { specs } from "./swagger.js";
+import { specs } from "../swagger/swagger.js";
 
-import authRoutes from "./auth/auth.routes.js";
+import authRoutes from "./auth/router/auth.router.js";
 import subjectRouter from "./subject/router/subject.router.js";
-import { requireAuth } from "./auth/auth.middleware.js"; // export 방식에 맞게
+import { requireAuth } from "./auth/middleware/auth.middleware.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);

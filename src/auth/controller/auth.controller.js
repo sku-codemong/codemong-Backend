@@ -5,8 +5,6 @@ import {
   accessCookieOptions,
   refreshCookieName,
   refreshCookieOptions,
-  accessCookieName,
-  accessCookieOptions,
 } from "../../utils/cookies.js";
 import {
   parseRegisterRequest,
@@ -49,10 +47,12 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const dto = parseLoginRequest(req.body);
-    const { user, accessToken, refreshTokenValue } = await authService.login(dto);
+    const { user, accessToken, refreshTokenValue } = await authService.login(
+      dto
+    );
 
     // 토큰은 httpOnly 쿠키로 전달
-    res.cookie(accessCookieName,  accessToken,       accessCookieOptions);
+    res.cookie(accessCookieName, accessToken, accessCookieOptions);
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
 
     // 바디에는 민감정보 빼고 유저만
@@ -81,7 +81,7 @@ export const refresh = async (req, res, next) => {
     });
 
     // 새 토큰 쿠키로 재발급
-    res.cookie(accessCookieName,  accessToken,       accessCookieOptions);
+    res.cookie(accessCookieName, accessToken, accessCookieOptions);
     res.cookie(refreshCookieName, refreshTokenValue, refreshCookieOptions);
 
     // 바디에는 토큰 전달 X
@@ -111,8 +111,14 @@ export const logout = async (req, res, next) => {
     await authService.logout({ refreshTokenValue: cur, allDevices, userId });
 
     // 설정 때와 동일한 옵션으로 삭제 (path/domain/sameSite/secure 등)
-    res.clearCookie(accessCookieName,  { ...accessCookieOptions,  path: accessCookieOptions.path });
-    res.clearCookie(refreshCookieName, { ...refreshCookieOptions, path: refreshCookieOptions.path });
+    res.clearCookie(accessCookieName, {
+      ...accessCookieOptions,
+      path: accessCookieOptions.path,
+    });
+    res.clearCookie(refreshCookieName, {
+      ...refreshCookieOptions,
+      path: refreshCookieOptions.path,
+    });
 
     return res.sendStatus(204); // 본문 없이 성공
   } catch (e) {
