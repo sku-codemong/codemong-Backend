@@ -13,8 +13,8 @@ export async function create(userId, data) {
       user_id: userId,
       name: data.name,
       color: data.color ?? null,
-      target_weekly_min: data.target_weekly_min ?? 0,
-      credit: data.credit ?? null,          // ⬅️ 새 필드
+      target_daily_min: data.target_daily_min ?? 0,
+      credit: data.credit ?? null, // ⬅️ 새 필드
       difficulty: data.difficulty ?? "Normal", // ⬅️ 새 필드(enum)
       // weight는 서비스에서 계산해서 update하도록 두거나, DB default(1.00) 사용
     },
@@ -35,8 +35,8 @@ export async function updateById(userId, id, data) {
     data: {
       ...(data.name !== undefined && { name: data.name }),
       ...(data.color !== undefined && { color: data.color }),
-      ...(data.target_weekly_min !== undefined && {
-        target_weekly_min: data.target_weekly_min,
+      ...(data.target_daily_min !== undefined && {
+        target_daily_min: data.target_daily_min,
       }),
       ...(data.credit !== undefined && { credit: data.credit }),
       ...(data.difficulty !== undefined && { difficulty: data.difficulty }),

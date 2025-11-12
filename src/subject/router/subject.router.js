@@ -16,7 +16,7 @@ const router = Router();
  * /api/subjects:
  *   post:
  *     summary: 과목 생성
- *     description: 로그인된 유저의 새로운 과목을 생성합니다. credit(학점), difficulty(난이도) 등 입력값을 기반으로 weight(가중치)가 자동 계산됩니다.
+ *     description: "로그인된 유저의 새로운 과목을 생성합니다. credit(학점), difficulty(난이도: 1~5) 등을 기반으로 weight(가중치)가 자동 계산됩니다."
  *     tags: [Subjects]
  *     security:
  *       - BearerAuth: []
@@ -34,17 +34,20 @@ const router = Router();
  *               color:
  *                 type: string
  *                 example: "#7C3AED"
- *               target_weekly_min:
+ *               target_daily_min:
  *                 type: integer
- *                 example: 300
+ *                 description: 하루 목표 공부 시간(분)
+ *                 example: 60
  *               credit:
  *                 type: number
  *                 format: float
  *                 example: 3.0
  *               difficulty:
- *                 type: string
- *                 enum: [Easy, Normal, Hard]
- *                 example: "Normal"
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 description: "난이도(1=매우 쉬움, 2=쉬움, 3=보통, 4=어려움, 5=매우 어려움)"
+ *                 example: 3
  *     responses:
  *       "201":
  *         description: 생성된 과목
@@ -60,7 +63,7 @@ router.post("/", ctrl.createSubject);
  * /api/subjects/{id}:
  *   patch:
  *     summary: 과목 수정
- *     description: 과목 정보를 수정하고, credit/difficulty 변경 시 weight를 자동 재계산합니다.
+ *     description: "과목 정보를 수정하고, credit/difficulty 변경 시 weight를 자동 재계산합니다."
  *     tags: [Subjects]
  *     security:
  *       - BearerAuth: []
@@ -77,11 +80,26 @@ router.post("/", ctrl.createSubject);
  *           schema:
  *             type: object
  *             properties:
- *               name: { type: string, example: "운영체제" }
- *               color: { type: string, example: "#10B981" }
- *               target_weekly_min: { type: integer, example: 240 }
- *               credit: { type: number, format: float, example: 3.0 }
- *               difficulty: { type: string, enum: [Easy, Normal, Hard], example: "Hard" }
+ *               name:
+ *                 type: string
+ *                 example: "운영체제"
+ *               color:
+ *                 type: string
+ *                 example: "#10B981"
+ *               target_daily_min:
+ *                 type: integer
+ *                 description: 하루 목표 공부 시간(분)
+ *                 example: 45
+ *               credit:
+ *                 type: number
+ *                 format: float
+ *                 example: 3.0
+ *               difficulty:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 description: "난이도(1=매우 쉬움, 2=쉬움, 3=보통, 4=어려움, 5=매우 어려움)"
+ *                 example: 4
  *     responses:
  *       "200":
  *         description: 수정된 과목
@@ -158,7 +176,7 @@ router.get("/:id", ctrl.getSubjectById);
  * /api/subjects:
  *   get:
  *     summary: 과목 목록 조회
- *     description: 로그인된 유저의 과목 목록을 검색/페이징 조건으로 조회합니다. archived=false인 과목만 기본으로 반환하며, includeArchived=true를 지정하면 보관 과목도 포함됩니다.
+ *     description: 로그인된 유저의 과목 목록을 검색/페이징 조건으로 조회합니다. 기본은 archived=false이며, includeArchived=true로 보관 과목도 포함할 수 있습니다.
  *     tags: [Subjects]
  *     security:
  *       - BearerAuth: []
@@ -199,9 +217,6 @@ router.get("/:id", ctrl.getSubjectById);
  *                   type: integer
  *                   nullable: true
  */
-router.get(
-  "/",
-  ctrl.listSubjects
-);
+router.get("/", ctrl.listSubjects);
 
 export default router;
