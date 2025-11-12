@@ -25,32 +25,21 @@ enum StudyStatus {
 }
 
 /**
- * 난이도
- */
-enum SubjectDifficulty {
-  Easy
-  Normal
-  Hard
-}
-
-/**
- * 과제/프로젝트/시험 등 작업 유형
+ * 작업 유형
+ * (요청: assignment만 유지)
  */
 enum TaskType {
   assignment
-  project
-  exam
-  etc
 }
 
 /**
  * 작업 상태
+ * (요청: archived 제거)
  */
 enum TaskStatus {
   todo
   in_progress
   done
-  archived
 }
 
 //// users ////
@@ -79,11 +68,14 @@ model subjects {
   user_id           Int
   name              String  @db.VarChar(100)
   color             String? @db.VarChar(20)
-  target_weekly_min Int     @default(0)
+
+  // ⬇️ 주 → 일 단위로 필드 교체
+  target_daily_min  Int     @default(0)
 
   // ⬇️ 가중치 계산의 입력값
-  credit     Decimal?          @db.Decimal(3, 1) // 학점 (예: 3.0)
-  difficulty SubjectDifficulty @default(Normal) // 난이도
+  credit     Decimal? @db.Decimal(3, 1) // 학점 (예: 3.0)
+  // 요청: 난이도 enum → 정수(1~5)
+  difficulty Int      @default(3) @db.SmallInt // 1(매우 쉬움) ~ 5(매우 어려움)
 
   // ⬇️ 최종 분배 가중치(서비스에서 계산하여 캐시)
   weight Decimal @default(1.00) @db.Decimal(5, 2)

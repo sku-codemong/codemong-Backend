@@ -21,8 +21,8 @@ export function parseCreateDto(body) {
   return {
     name: ensureString(body.name, "name"),
     color: body.color?.trim() || null,
-    target_weekly_min:
-      toIntOrNull(body.target_weekly_min, "target_weekly_min") ?? 0,
+    target_daily_min:
+      toIntOrNull(body.target_daily_min, "target_daily_min") ?? 0,
     credit: body.credit != null ? Number(body.credit) : null,
     difficulty: body.difficulty ?? "Normal",
   };
@@ -32,10 +32,10 @@ export function parseUpdateDto(body) {
   const dto = {};
   if (body.name !== undefined) dto.name = ensureString(body.name, "name");
   if (body.color !== undefined) dto.color = body.color?.trim() || null;
-  if (body.target_weekly_min !== undefined)
-    dto.target_weekly_min = toIntOrNull(
-      body.target_weekly_min,
-      "target_weekly_min"
+  if (body.target_daily_min !== undefined)
+    dto.target_daily_min = toIntOrNull(
+      body.target_daily_min,
+      "target_daily_min"
     );
   if (body.credit !== undefined)
     dto.credit = body.credit != null ? Number(body.credit) : null;
