@@ -12,6 +12,8 @@ import subjectRouter from "./subject/router/subject.router.js";
 import { requireAuth } from "./auth/middleware/auth.middleware.js";
 import userRouter from "./user/router/user.router.js";
 import subjectTasksRouter from "./subject-tasks/router/subject-tasks.router.js";
+import sessionsRouter from "./session/router/session.router.js";
+import sessionReportRouter from "./session/router/session.report.router.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -50,6 +52,16 @@ app.use(
   "/api/subject-tasks",
   requireAuth({ allowCookie: true, cookieName: "at" }),
   subjectTasksRouter
+);
+app.use(
+  "/api/sessions",
+  requireAuth({ allowCookie: true, cookieName: "at" }),
+  sessionsRouter
+);
+app.use(
+  "/api/sessions",
+  requireAuth({ allowCookie: true, cookieName: "at" }),
+  sessionReportRouter
 );
 
 // ✅ 마지막에 서버 시작
