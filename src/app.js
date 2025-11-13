@@ -7,9 +7,10 @@ import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 import { specs } from "../swagger/swagger.js";
 
-import authRoutes from "./auth/router/auth.router.js";
+import authRouter from "./auth/router/auth.router.js";
 import subjectRouter from "./subject/router/subject.router.js";
 import { requireAuth } from "./auth/middleware/auth.middleware.js";
+import userRouter from "./user/router/user.router.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -33,11 +34,16 @@ app.use(
 );
 
 // ✅ 라우트는 listen 위에!
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRouter);
 app.use(
   "/api/subjects",
   requireAuth({ allowCookie: true, cookieName: "at" }),
   subjectRouter
+);
+app.use(
+  "/api/user",
+  requireAuth({ allowCookie: true, cookieName: "at" }),
+  userRouter
 );
 
 // ✅ 마지막에 서버 시작
