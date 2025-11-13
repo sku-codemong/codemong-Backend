@@ -1,17 +1,34 @@
 import { prisma } from "../../db.config.js";
 
+// 클라이언트로 보내도 되는 필드들 (안전 필드)
+const userSelectSafe = {
+  id: true,
+  email: true,
+  nickname: true,
+  grade: true,
+  gender: true,
+  is_completed: true,
+  created_at: true,
+  updated_at: true,
+};
+
+// 로그인 검증용: 비밀번호 해시까지 포함
+const userSelectWithPassword = {
+  ...userSelectSafe,
+  password_hash: true,
+};
+
 /**
  * **[Auth]**
  * **<📦 Repository>**
  * ***findUserByEmail***
  * '이메일로 유저 조회' 기능의 레포지토리 레이어입니다.
- * DB의 users 테이블에서 해당 이메일을 가진 유저를 조회합니다.
- * @param {string} email - 조회할 유저의 이메일
- * @returns {Promise<object|null>} - 존재하면 유저 객체, 없으면 null
+ * 로그인/중복검사에 사용되며, 비밀번호 검증을 위해 password_hash도 조회합니다.
  */
 export const findUserByEmail = (email) => {
   return prisma.users.findUnique({
     where: { email },
+    select: userSelectWithPassword, // ✅ 비번 해시 포함
   });
 };
 
@@ -20,13 +37,12 @@ export const findUserByEmail = (email) => {
  * **<📦 Repository>**
  * ***findUserById***
  * 'ID로 유저 조회' 기능의 레포지토리 레이어입니다.
- * DB의 users 테이블에서 해당 ID를 가진 유저를 조회합니다.
- * @param {number} id - 조회할 유저의 ID
- * @returns {Promise<object|null>} - 존재하면 유저 객체, 없으면 null
+ * /me 같은 응답용으로 사용되며, password_hash는 포함하지 않습니다.
  */
 export const findUserById = (id) => {
   return prisma.users.findUnique({
     where: { id },
+    select: userSelectSafe, // ✅ 안전 필드만
   });
 };
 
@@ -35,9 +51,7 @@ export const findUserById = (id) => {
  * **<📦 Repository>**
  * ***createUser***
  * '회원가입' 기능의 레포지토리 레이어입니다.
- * DB의 users 테이블에 새로운 유저 정보를 삽입하고 생성된 유저의 주요 정보를 반환합니다.
- * @param {object} data - { email, passwordHash, nickname, grade, gender }
- * @returns {Promise<object>} - 생성된 유저의 id, email, nickname, grade, gender
+ * 새 유저를 만들고, 클라이언트 응답용 필드만 반환합니다.
  */
 export const createUser = ({
   email,
@@ -54,13 +68,7 @@ export const createUser = ({
       grade,
       gender,
     },
-    select: {
-      id: true,
-      email: true,
-      nickname: true,
-      grade: true,
-      gender: true,
-    },
+    select: userSelectSafe, // ✅ 안전 필드만
   });
 };
 
@@ -68,10 +76,6 @@ export const createUser = ({
  * **[Auth]**
  * **<📦 Repository>**
  * ***createRefreshToken***
- * '리프레시 토큰 생성' 기능의 레포지토리 레이어입니다.
- * DB의 refresh_token 테이블에 새 토큰 레코드를 삽입합니다.
- * @param {object} data - { userId, token }
- * @returns {Promise<object>} - 생성된 토큰의 id, user_id, updated_at
  */
 export const createRefreshToken = ({ userId, token }) => {
   return prisma.refresh_token.create({
@@ -87,10 +91,6 @@ export const createRefreshToken = ({ userId, token }) => {
  * **[Auth]**
  * **<📦 Repository>**
  * ***findRefreshToken***
- * '리프레시 토큰 조회' 기능의 레포지토리 레이어입니다.
- * DB의 refresh_token 테이블에서 토큰 값(또는 userId와 함께)을 조건으로 토큰을 조회합니다.
- * @param {object} data - { token, userId }
- * @returns {Promise<object|null>} - 존재하면 토큰 객체, 없으면 null
  */
 export const findRefreshToken = ({ token, userId }) => {
   return prisma.refresh_token.findFirst({
@@ -103,10 +103,6 @@ export const findRefreshToken = ({ token, userId }) => {
  * **[Auth]**
  * **<📦 Repository>**
  * ***updateRefreshToken***
- * '리프레시 토큰 갱신' 기능의 레포지토리 레이어입니다.
- * 지정된 id의 토큰 값을 새 토큰으로 업데이트합니다.
- * @param {object} data - { id, newToken }
- * @returns {Promise<object>} - 수정된 토큰의 id, updated_at
  */
 export const updateRefreshToken = ({ id, newToken }) => {
   return prisma.refresh_token.update({
@@ -120,10 +116,6 @@ export const updateRefreshToken = ({ id, newToken }) => {
  * **[Auth]**
  * **<📦 Repository>**
  * ***deleteRefreshToken***
- * '리프레시 토큰 삭제' 기능의 레포지토리 레이어입니다.
- * DB의 refresh_token 테이블에서 특정 토큰 값을 가진 레코드를 삭제합니다.
- * @param {string} token - 삭제할 토큰 값
- * @returns {Promise<object>} - 삭제된 행의 개수 정보(count)
  */
 export const deleteRefreshToken = (token) => {
   return prisma.refresh_token.deleteMany({
@@ -135,10 +127,6 @@ export const deleteRefreshToken = (token) => {
  * **[Auth]**
  * **<📦 Repository>**
  * ***deleteRefreshTokenForUser***
- * '유저의 모든 리프레시 토큰 삭제' 기능의 레포지토리 레이어입니다.
- * 특정 user_id를 가진 모든 리프레시 토큰을 삭제합니다.
- * @param {number} userId - 삭제할 유저의 ID
- * @returns {Promise<object>} - 삭제된 행의 개수 정보(count)
  */
 export const deleteRefreshTokenForUser = (userId) => {
   return prisma.refresh_token.deleteMany({

@@ -4,7 +4,6 @@ import {
   getMyProfile,
   updateMyProfile,
 } from "../controller/user.controller.js";
-import { requireAuth } from "../../auth/middleware/auth.middleware.js";
 
 const router = Router();
 
