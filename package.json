@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/app.js",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "start:prod": "npm run migrate:deploy && npm run start"
   },
   "repository": {
     "type": "git",
