@@ -59,6 +59,9 @@ const router = Router();
  *         today:
  *           type: string
  *           example: "2025-11-14"
+ *         daily_target_min:
+ *           type: integer
+ *           example: 180
  *         recommended:
  *           type: array
  *           items:
@@ -70,7 +73,7 @@ const router = Router();
  *               recommended_min:
  *                 type: integer
  *                 example: 50
- *
+ * 
  *     ReportResponse:
  *       type: object
  *       properties:
@@ -146,7 +149,7 @@ router.get("/report/weekly", ctrl.getWeeklyReport);
  * /api/sessions/recommend/today:
  *   get:
  *     summary: 오늘의 공부 분배 추천
- *     description: "Subject의 weight(가중치)를 기반으로 오늘 추천되는 공부량을 계산합니다."
+ *     description: "사용자의 하루 목표 총 공부 시간(daily_target_min)과 과목 weight를 기반으로 오늘 과목별 추천 공부 시간을 계산합니다."
  *     tags: [SessionReports]
  *     security:
  *       - BearerAuth: []
@@ -163,5 +166,39 @@ router.get("/report/weekly", ctrl.getWeeklyReport);
  *                   $ref: '#/components/schemas/TodayRecommendation'
  */
 router.get("/recommend/today", ctrl.getTodayRecommendation);
+
+/**
+ * @swagger
+ * /api/sessions/daily-target:
+ *   patch:
+ *     summary: 하루 목표 총 공부 시간 설정
+ *     description: "사용자의 하루 목표 총 공부 시간(분)을 설정하거나 변경합니다."
+ *     tags: [SessionReports]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [daily_target_min]
+ *             properties:
+ *               daily_target_min:
+ *                 type: integer
+ *                 example: 180
+ *                 description: "하루 목표 총 공부 시간(분)"
+ *     responses:
+ *       "200":
+ *         description: 설정된 목표 시간
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok: { type: boolean, example: true }
+ *                 daily_target_min: { type: integer, example: 180 }
+ */
+router.patch("/daily-target", ctrl.updateDailyTarget);
 
 export default router;
