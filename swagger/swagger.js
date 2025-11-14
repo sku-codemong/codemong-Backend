@@ -22,8 +22,10 @@ const options = {
       },
     },
     servers: [
-      { url: "http://localhost:4000" }, // 로컬 개발용
-      { url: "https://codemong-backend.onrender.com" }, // 배포용
+      {
+        url: "https://codemong-backend.onrender.com", // ✅ Render 주소만 사용
+        description: "Render production server",
+      },
     ],
     security: [{ BearerAuth: [] }],
   },
