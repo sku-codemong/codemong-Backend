@@ -18,3 +18,17 @@ export const findUserSubjects = (user_id) => {
     where: { user_id, archived: false },
   });
 };
+
+export const updateUserDailyTarget = (user_id, daily_target_min) => {
+  return prisma.users.update({
+    where: { id: user_id },
+    data: { daily_target_min },
+  });
+};
+
+export const findUserDailyTarget = (user_id) => {
+  return prisma.users.findUnique({
+    where: { id: user_id },
+    select: { daily_target_min: true },
+  });
+};

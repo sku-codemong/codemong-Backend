@@ -37,6 +37,7 @@ export class WeeklyReportResponseDTO {
 export class TodayRecommendationResponseDTO {
   constructor(data) {
     this.today = data.today;
+    this.daily_target_min = data.daily_target_min;
     this.recommended = data.recommended;
   }
 }
