@@ -14,16 +14,18 @@ const options = {
     info: {
       version: "1.0.0",
       title: "codemong 백엔드",
-      description:
-        "학습 시간 관리 서비스입니다.",
+      description: "학습 시간 관리 서비스입니다.",
     },
     components: {
       securitySchemes: {
         BearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
       },
     },
-    servers: [{ url: "http://localhost:4000" }],
-    security: [{ BearerAuth: [] }], 
+    servers: [
+      { url: "http://localhost:4000" }, // 로컬 개발용
+      { url: "https://codemong-backend.onrender.com" }, // 배포용
+    ],
+    security: [{ BearerAuth: [] }],
   },
   // 주석이 들어있는 라우터/컨트롤러 경로로 맞춰주세요
   // 전체 src 폴더를 긁어오는게 안전합니다.
