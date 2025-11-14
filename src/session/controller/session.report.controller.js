@@ -2,6 +2,7 @@ import * as service from "../service/session.report.service.js";
 import {
   DailyReportRequestDTO,
   WeeklyReportRequestDTO,
+  UpdateDailyTargetRequestDTO,
 } from "../dto/session.request.dto.js";
 import {
   DailyReportResponseDTO,
@@ -26,5 +27,15 @@ export const getTodayRecommendation = async (req, res) => {
   return res.json({
     ok: true,
     recommendation: new TodayRecommendationResponseDTO(data),
+  });
+};
+
+export const updateDailyTarget = async (req, res) => {
+  const dto = new UpdateDailyTargetRequestDTO(req.body);
+  const daily_target_min = await service.updateDailyTarget(req.user.id, dto);
+
+  return res.json({
+    ok: true,
+    daily_target_min,
   });
 };

@@ -35,3 +35,9 @@ export class WeeklyReportRequestDTO {
     this.week_start = week_start;
   }
 }
+
+export class UpdateDailyTargetRequestDTO {
+  constructor({ daily_target_min }) {
+    this.daily_target_min = Number(daily_target_min);
+  }
+}

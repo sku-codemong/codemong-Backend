@@ -63,15 +63,32 @@ export const getWeeklyReport = async (user_id, dto) => {
 
 export const getTodayRecommendation = async (user_id) => {
   const subjects = await repo.findUserSubjects(user_id);
+  const userTarget = await repo.findUserDailyTarget(user_id);
 
   const today = new Date().toISOString().slice(0, 10);
+  const daily_target_min = userTarget?.daily_target_min ?? 0;
 
-  const recommended = subjects.map((s) => ({
-    subject_id: s.id,
-    subject_name: s.name,
-    weight: Number(s.weight),
-    recommended_min: Math.round(Number(s.weight) * 30),
-  }));
+  // weight 합을 1로 정규화해서 daily_target_min을 분배
+  const totalWeight =
+    subjects.reduce((sum, s) => sum + Number(s.weight), 0) || 1;
 
-  return { today, recommended };
+  const recommended = subjects.map((s) => {
+    const ratio = Number(s.weight) / totalWeight;
+    return {
+      subject_id: s.id,
+      subject_name: s.name,
+      weight: Number(s.weight),
+      recommended_min: Math.round(daily_target_min * ratio),
+    };
+  });
+
+  return { today, daily_target_min, recommended };
+};
+
+export const updateDailyTarget = async (user_id, dto) => {
+  const updatedUser = await repo.updateUserDailyTarget(
+    user_id,
+    dto.daily_target_min
+  );
+  return updatedUser.daily_target_min;
 };
