@@ -4,6 +4,7 @@ import {
   StopSessionRequestDTO,
   ManualSessionRequestDTO,
   ListSessionRequestDTO,
+  UpdateSessionNoteRequestDTO,
 } from "../dto/session.request.dto.js";
 import {
   SessionResponseDTO,
@@ -35,4 +36,17 @@ export const list = async (req, res) => {
   const dto = new ListSessionRequestDTO(req.query);
   const sessions = await service.getSessionsByDate(req.user.id, dto);
   return res.json({ ok: true, ...new SessionListResponseDTO(sessions) });
+};
+
+export const updateNote = async (req, res) => {
+  try {
+    const sessionId = Number(req.params.id);
+    const userId = req.user.id;
+    const dto = new UpdateSessionNoteRequestDTO(req.body);
+
+    const session = await service.updateSessionNote(userId, sessionId, dto);
+    return res.json({ ok: true, session: new SessionResponseDTO(session) });
+  } catch (err) {
+    return res.status(400).json({ ok: false, message: err.message });
+  }
 };
