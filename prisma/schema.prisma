@@ -107,6 +107,9 @@ model sessions {
   source       StudySource @default(timer)
   status       StudyStatus @default(running)
 
+  // ⬇️ 세션별 학습 노트 (선택)
+  note         String?     @db.Text
+  
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

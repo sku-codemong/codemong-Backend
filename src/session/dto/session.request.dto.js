@@ -41,3 +41,10 @@ export class UpdateDailyTargetRequestDTO {
     this.daily_target_min = Number(daily_target_min);
   }
 }
+
+export class UpdateSessionNoteRequestDTO {
+  constructor({ note }) {
+    // 빈 값 들어와도 문자열로 맞춰줌
+    this.note = typeof note === "string" ? note : "";
+  }
+}
