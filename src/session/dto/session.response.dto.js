@@ -8,6 +8,7 @@ export class SessionResponseDTO {
     this.duration_sec = s.duration_sec;
     this.source = s.source;
     this.status = s.status;
+    this.note = s.note ?? null;
   }
 }
 

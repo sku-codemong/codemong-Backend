@@ -1,3 +1,4 @@
+// src/session/router/session.router.js
 import { Router } from "express";
 import * as ctrl from "../controller/session.controller.js";
 
@@ -31,6 +32,10 @@ const router = Router();
  *           type: string
  *           enum: [running, stopped]
  *           example: "running"
+ *         note:
+ *           type: string
+ *           nullable: true
+ *           example: "오늘은 그리디 알고리즘 개념 정리함"
  *         created_at: { type: string, format: date-time }
  *         updated_at: { type: string, format: date-time }
  *
@@ -151,6 +156,43 @@ router.post("/stop", ctrl.stop);
  *               $ref: '#/components/schemas/SessionResponse'
  */
 router.post("/manual", ctrl.manual);
+
+/**
+ * @swagger
+ * /api/sessions/{id}/note:
+ *   patch:
+ *     summary: 세션 학습 노트 저장/수정
+ *     description: "특정 세션에 대한 학습 노트를 저장하거나 수정합니다."
+ *     tags: [Sessions]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: "노트를 저장할 세션 ID"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [note]
+ *             properties:
+ *               note:
+ *                 type: string
+ *                 example: "DP 기본 개념 복습하고 예제 3문제 품"
+ *     responses:
+ *       "200":
+ *         description: 업데이트된 세션 정보
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SessionResponse'
+ */
+router.patch("/:id/note", ctrl.updateNote);
 
 /**
  * @swagger

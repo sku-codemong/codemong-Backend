@@ -33,3 +33,17 @@ export const getSessionsByDate = async (user_id, dto) => {
   const end = new Date(`${dto.date}T23:59:59`);
   return await repo.findSessionsByDate(user_id, start, end);
 };
+
+export const updateSessionNote = async (user_id, session_id, dto) => {
+  // 세션이 내 것인지 먼저 확인
+  const session = await prisma.sessions.findFirst({
+    where: { id: session_id, user_id },
+  });
+
+  if (!session) {
+    throw new Error("세션을 찾을 수 없거나 권한이 없습니다.");
+  }
+
+  const updated = await repo.updateSessionNote(session_id, dto.note);
+  return updated;
+};

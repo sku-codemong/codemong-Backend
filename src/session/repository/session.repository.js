@@ -46,3 +46,10 @@ export const createManualSession = (
     },
   });
 };
+
+export const updateSessionNote = (session_id, note) => {
+  return prisma.sessions.update({
+    where: { id: session_id },
+    data: { note },
+  });
+};
